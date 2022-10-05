@@ -1,11 +1,9 @@
 #ifndef QUEUE_H_INCLUDED
 #define QUEUE_H_INCLUDED
 
-#include "torta.h"
-
 typedef struct Node
 {
-  Torta *data;
+  void* data;
   struct Node *next;
 }node;
 
@@ -18,9 +16,9 @@ typedef struct QueueList
 }Queue;
 
 void queueInit(Queue *q, size_t memSize);
-int enqueue(Queue *, const Torta *);
-void dequeue(Queue *, Torta *);
-void queuePeek(Queue *, Torta *);
+int enqueue(Queue *, const void *);
+void dequeue(Queue *, void *);
+void queuePeek(Queue *, void *);
 void clearQueue(Queue *);
 int getQueueSize(Queue *);
 

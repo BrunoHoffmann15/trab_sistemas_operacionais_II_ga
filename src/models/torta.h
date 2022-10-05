@@ -5,6 +5,6 @@ typedef struct torta
     char* descricao;
     short int qualidade;
     short int doce;
-    usecond_t tempo_producao;
-    usecond_t tempo_consumo;
+    useconds_t tempo_producao;
+    useconds_t tempo_consumo;
 } Torta;

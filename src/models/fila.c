@@ -10,7 +10,7 @@ void queueInit(Queue *q, size_t memSize)
    q->head = q->tail = NULL;
 }
 
-int enqueue(Queue *q, const Torta *data)
+int enqueue(Queue *q, const void* data)
 {
     node *newNode = (node *)malloc(sizeof(node));
 
@@ -45,7 +45,7 @@ int enqueue(Queue *q, const Torta *data)
     return 0;
 }
 
-void dequeue(Queue *q, Torta *data)
+void dequeue(Queue *q, void* data)
 {
     if(q->sizeOfQueue > 0)
     {
@@ -68,7 +68,7 @@ void dequeue(Queue *q, Torta *data)
     }
 }
 
-void queuePeek(Queue *q, Torta *data)
+void queuePeek(Queue *q, void* data)
 {
     if(q->sizeOfQueue > 0)
     {
@@ -96,4 +96,8 @@ void clearQueue(Queue *q)
 int getQueueSize(Queue *q)
 {
     return q->sizeOfQueue;
+}
+
+int isEmpty(Queue *q) {
+    return q->sizeOfQueue == 0;
 }
