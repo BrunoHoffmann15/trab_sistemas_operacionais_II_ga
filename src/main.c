@@ -22,7 +22,7 @@ sem_t sem_consumidor[N_CONSUMIDORES];
 
 char *tipos_tortas[] = {"Torta Chocolate", "Torta Amendoim", "Torta Frango"};
 
-void adicionar_torta_fila(struct torta torta) {
+void adicionar_torta_fila(Torta torta) {
     sem_wait(&mutex);
     enqueue(&fila, &torta);
     sem_post(&mutex);
@@ -44,15 +44,15 @@ void produzir_torta(struct dados_produtor* dados) {
     usleep(1000000 * (rand() % 10));
 }
 
-Torta *obter_torta_disponivel() {
-    Torta *torta_atual;
+Torta obter_torta_disponivel() {
+    Torta torta_atual;
 
     sem_wait(&mutex);
     
     if (getQueueSize(&fila) == 0) {
         printf("tá vazia essa merda\n");
         sem_post(&mutex);
-        return NULL;
+        return torta_atual;
     }
 
     dequeue(&fila, &torta_atual);
@@ -66,16 +66,15 @@ void consumir_tortas_doces() {
     sem_wait(&sem_consumidor[0]);
     printf("Doce - Vou pegar da fila.\n");
 
-    Torta *torta_atual = obter_torta_disponivel();
+    Torta torta_consumida = obter_torta_disponivel();
 
-    if (torta_atual == NULL) {
+    if (torta_consumida.descricao == NULL) {
         printf("estou sem coisa na fila.\n");
         sem_post(&sem_consumidor[0]);
         return;
     }
 
-    printf("consumi\n");
-    sem_post(&sem_consumidor[0]);
+    printf("consumi %s\n", torta_consumida.descricao);
 }
 
 void *criar_produtor(void * dados_produtor) {
@@ -97,6 +96,8 @@ int main() {
     sem_init(&mutex, 0, 1);
     sem_init(&sem_consumidor[0], 0, 0);
     sem_init(&sem_consumidor[1], 0, 0);
+
+    queueInit(&fila, sizeof(Torta));
 
     struct dados_produtor dados = {
         .sem_index_consumidor = 0,
