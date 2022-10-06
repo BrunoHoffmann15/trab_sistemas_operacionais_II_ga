@@ -29,19 +29,22 @@ void adicionar_torta_fila(Torta torta) {
 }
 
 void produzir_torta(struct dados_produtor* dados) {
-    printf("Produzindo torta.\n");
-    
+    printf("[Produtor %d] Comecei fluxo.\n", dados->tipo_torta);
+    int tempo_producao = rand() % 10;
+
     Torta torta = {
         .descricao = tipos_tortas[dados->tipo_torta],
         .doce = dados->tipo_torta_doce,
-        .qualidade = rand() % 10
+        .qualidade = rand() % 10,
+        .tempo_producao = tempo_producao,
+        .tempo_consumo = tempo_producao * 0.5
     };
 
     adicionar_torta_fila(torta);  
     
-    printf("Enfileirei torta.\n");
+    printf("[Produtor %d] Enfileirei torta.\n", dados->tipo_torta);
     sem_post(&sem_consumidor[dados->sem_index_consumidor]);
-    usleep(1000000 * (rand() % 10));
+    usleep(torta.tempo_producao * 1000000);
 }
 
 Torta obter_torta_disponivel() {
@@ -50,7 +53,6 @@ Torta obter_torta_disponivel() {
     sem_wait(&mutex);
     
     if (getQueueSize(&fila) == 0) {
-        printf("tá vazia essa merda\n");
         sem_post(&mutex);
         return torta_atual;
     }
@@ -62,19 +64,49 @@ Torta obter_torta_disponivel() {
 }
 
 void consumir_tortas_doces() {
-    usleep(1000000 * 3);
     sem_wait(&sem_consumidor[0]);
     printf("Doce - Vou pegar da fila.\n");
 
     Torta torta_consumida = obter_torta_disponivel();
 
+    printf("Doce - Consegui pegar torta, vou consumir: %d\n", torta_consumida.tempo_consumo);
+
+    if (torta_consumida.doce == 0) {
+        printf("Doce - Não é meu tipo de torta");
+        sem_post(&sem_consumidor[1]);
+        return;
+    }
+
     if (torta_consumida.descricao == NULL) {
-        printf("estou sem coisa na fila.\n");
+        printf("Doce - estou sem coisa na fila.\n");
+        return;
+    }
+
+    usleep(torta_consumida.tempo_consumo * 1000000);
+    printf("Doce - consumi %s\n", torta_consumida.descricao);
+}
+
+void consumir_tortas_salgadas() {
+    sem_wait(&sem_consumidor[1]);
+    printf("Salgado - Vou pegar da fila.\n");
+
+    Torta torta_consumida = obter_torta_disponivel();
+
+    printf("Doce - Consegui pegar torta, vou consumir: %d\n", torta_consumida.tempo_consumo);
+
+    if (torta_consumida.doce == 0) {
+        printf("Salgado - Não é meu tipo de torta");
         sem_post(&sem_consumidor[0]);
         return;
     }
 
-    printf("consumi %s\n", torta_consumida.descricao);
+    if (torta_consumida.descricao == NULL) {
+        printf("Salgado - estou sem coisa na fila.\n");
+        return;
+    }
+
+    usleep(torta_consumida.tempo_consumo * 1000000);
+    printf("Salgado - consumi %s\n", torta_consumida.descricao);
 }
 
 void *criar_produtor(void * dados_produtor) {
@@ -89,6 +121,11 @@ void *criar_consumidor(void * dados_consumidor) {
     }
 }
 
+void *criar_consumidor2(void * dados_consumidor) {
+    while (1) {
+        consumir_tortas_salgadas();
+    }
+}
 
 int main() {
     pthread_t thread[5];
@@ -105,11 +142,28 @@ int main() {
         .tipo_torta_doce = 1
     };
 
+    struct dados_produtor dados2 = {
+        .sem_index_consumidor = 0,
+        .tipo_torta = 1,
+        .tipo_torta_doce = 1
+    };
+
+    struct dados_produtor dados3 = {
+        .sem_index_consumidor = 1,
+        .tipo_torta = 2,
+        .tipo_torta_doce = 1
+    };
+
     pthread_create(&thread[0], NULL, criar_produtor, (void*) &dados);
-    pthread_create(&thread[1], NULL, criar_consumidor, NULL);
-    //pthread_create(&thread[2], NULL, criar_consumidor2, NULL);
+    pthread_create(&thread[1], NULL, criar_produtor, (void*) &dados2);
+    pthread_create(&thread[2], NULL, criar_produtor, (void*) &dados3);
+    pthread_create(&thread[3], NULL, criar_consumidor, NULL);
+    pthread_create(&thread[4], NULL, criar_consumidor2, NULL);
 
     (void) pthread_join(thread[0], NULL);
     (void) pthread_join(thread[1], NULL);
     (void) pthread_join(thread[2], NULL);
+    (void) pthread_join(thread[3], NULL);
+    (void) pthread_join(thread[4], NULL);
+
 }
