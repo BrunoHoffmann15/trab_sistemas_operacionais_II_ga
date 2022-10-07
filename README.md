@@ -7,7 +7,7 @@ Disciplina: Análise e Aplicação de Sistemas Operacionais.
 ## Contexto do Trabalho
 O presente trabalho represente uma fábrica de produção de tortas, onde há máquinas produtoras, máquinas consumidoras e uma esteira. As tortas podem ser classificadas entre doces e salgadas, e os consumidores serão responsável por consumir um tipo de torta específica. 
 
-As tortas possuíram os seguintes atributos:
+As tortas possuem os seguintes atributos:
 - Serial: um identificador.
 - Qualidade: um valor relacionado a sua qualidade (0 - Ruim; 1 - Bom; 2 - Muito bom;).
 - Tipo da torta: se ela é doce ou salgada
