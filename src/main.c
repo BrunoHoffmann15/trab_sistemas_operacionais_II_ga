@@ -208,8 +208,6 @@ void gerar_relatorios() {
     }
     
     printf("Quantidade total de desperdício: %d\n\n", quantidade_tortas_desperdicadas);
-
-    exit(EXIT_SUCCESS);
 }
 
 void finalizar_programa() {
@@ -221,72 +219,10 @@ void finalizar_programa() {
 
     gerar_relatorios();
 
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
+
 /**BEGIN REGION: Finalização programa.**/
-
-void inicializar_semaforos() {
-    sem_init(&mutex_fila, 0, 1);
-    sem_init(&sem_consumidor[0], 0, 0);
-    sem_init(&sem_consumidor[1], 0, 0);
-}
-
-void inicializar_signal() {
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = &finalizar_programa;
-
-    sigaction(SIGINT, &sa, NULL);
-}
-
-void inicializar_produtores(int quantidade_tortas_produtor) {
-    struct dados_produtor dados_produtor = {
-        .id_produtor = 1,
-        .sem_index_consumidor = 0,
-        .tipo_torta = 0,
-        .tipo_torta_doce = 1,
-        .quantidade_producao = quantidade_tortas_produtor
-    };
-
-    struct dados_produtor dados_produtor2 = {
-        .id_produtor = 2,
-        .sem_index_consumidor = 0,
-        .tipo_torta = 1,
-        .tipo_torta_doce = 1,
-        .quantidade_producao = quantidade_tortas_produtor
-    };
-
-    struct dados_produtor dados_produtor3 = {
-        .id_produtor = 3,
-        .sem_index_consumidor = 1,
-        .tipo_torta = 2,
-        .tipo_torta_doce = 0,
-        .quantidade_producao = quantidade_tortas_produtor
-    };
-
-    pthread_create(&thread[0], NULL, criar_produtor, (void*) &dados_produtor);
-    pthread_create(&thread[1], NULL, criar_produtor, (void*) &dados_produtor2);
-    pthread_create(&thread[2], NULL, criar_produtor, (void*) &dados_produtor3);
-}
-
-void inicializar_consumidores() {
-    struct dados_consumidor dados_cosumidor1 = {
-        .id_consumidor = 1,
-        .processa_torta_doce = 1,
-        .sem_index_consumidor = 0,
-        .sem_index_consumidor_concorrente = 1
-    };
-
-    struct dados_consumidor dados_cosumidor2 = {
-        .id_consumidor = 2,
-        .processa_torta_doce = 0,
-        .sem_index_consumidor = 1,
-        .sem_index_consumidor_concorrente = 0
-    };
-
-    pthread_create(&thread[3], NULL, criar_consumidor, (void*) &dados_cosumidor1);
-    pthread_create(&thread[4], NULL, criar_consumidor, (void*) &dados_cosumidor2);
-}
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
