@@ -34,37 +34,11 @@ Torta tortas_doces[N_MAX];
 Torta tortas_salgadas[N_MAX];
 
 char *tipos_tortas[] = {"Torta Chocolate", "Torta Amendoim", "Torta Frango"};
-char *caracteres_serial = "ABCDEFGHIJKLMNOPQRSTUVWXIZ1234567890";
 
 pthread_t thread[5];
 /**END REGION: Variáveis globais**/
 
-/**BEGIN REGION: Métodos declarados.**/
-void gerar_serial_torta(char serial[5]);
-void adicionar_torta_fila(Torta torta);
-void produzir_torta(struct dados_produtor* dados);
-int mandar_para_outro_consumidor(int processa_doce);
-Torta obter_torta_disponivel();
-void adicionar_torta_lista(Torta torta);
-void consumir_tortas(struct dados_consumidor* dados);
-void *criar_produtor(void * dados_produtor);
-void *criar_consumidor(void * dados_consumidor);
-void gerar_relatorios();
-void finalizar_programa();
-void inicializar_semaforos();
-void inicializar_signal();
-void inicializar_produtores(int quantidade_tortas_produtor);
-void inicializar_consumidores();
-/**BEGIN REGION: Métodos declarados.**/
-
-
 /**BEGIN REGION: Métodos Produtor.**/
-void gerar_serial_torta(char serial[5]) {
-    for(int i = 0; i < 5; i++) {
-        serial[i] = caracteres_serial[(rand() % 35)];
-    }
-}
-
 void adicionar_torta_fila(Torta torta) {
     sem_wait(&mutex_fila);
     enqueue(&fila, &torta);
@@ -73,12 +47,9 @@ void adicionar_torta_fila(Torta torta) {
 
 void produzir_torta(struct dados_produtor* dados) {
     int tempo_producao = (rand() % 5) + 2;
-    char serial[5];
-
-    gerar_serial_torta(serial);
 
     Torta torta = {
-        .serial = serial,
+        .serial = (rand() % 20000) * (rand() % 20),
         .descricao = tipos_tortas[dados->tipo_torta],
         .doce = dados->tipo_torta_doce,
         .qualidade = rand() % 3,
@@ -86,9 +57,9 @@ void produzir_torta(struct dados_produtor* dados) {
         .tempo_consumo = tempo_producao * 0.5
     };
 
-    printf("[Produtor %d] Comecei produção da torta de serial %s.\n\t Descrição da Torta: %s;\n\t Qualidade: %d;\n\t Tempo Consumo: %d;\n\t Tempo Produção: %d;\n", dados->id_produtor, torta.serial, torta.descricao, torta.qualidade, torta.tempo_consumo, torta.tempo_producao);
+    printf("[Produtor %d] Comecei produção da torta de serial %d.\n\t Descrição da Torta: %s;\n\t Qualidade: %d;\n\t Tempo Consumo: %d;\n\t Tempo Produção: %d;\n", dados->id_produtor, torta.serial, torta.descricao, torta.qualidade, torta.tempo_consumo, torta.tempo_producao);
     usleep(torta.tempo_producao * CONSTANTE_PARSE_SEG);
-    printf("[Produtor %d] Finalizei a produção torta de serial %s.\n", dados->id_produtor, torta.serial);
+    printf("[Produtor %d] Finalizei a produção torta de serial %d.\n", dados->id_produtor, torta.serial);
     adicionar_torta_fila(torta);  
     sem_post(&sem_consumidor[dados->sem_index_consumidor]);
 }
@@ -153,12 +124,11 @@ void consumir_tortas(struct dados_consumidor* dados) {
         return;
     }
 
-    printf("[Consumidor %d] Comecei a consumir torta de serial: %s.\n\t Descrição da Torta: %s;\n\t Qualidade: %d;\n\t Tempo Consumo: %d;\n\t Tempo Produção: %d;\n", dados->id_consumidor, torta_consumida.serial, torta_consumida.descricao, torta_consumida.qualidade, torta_consumida.tempo_consumo, torta_consumida.tempo_producao);
+    printf("[Consumidor %d] Comecei a consumir torta de serial: %d.\n\t Descrição da Torta: %s;\n\t Qualidade: %d;\n\t Tempo Consumo: %d;\n\t Tempo Produção: %d;\n", dados->id_consumidor, torta_consumida.serial, torta_consumida.descricao, torta_consumida.qualidade, torta_consumida.tempo_consumo, torta_consumida.tempo_producao);
     usleep(torta_consumida.tempo_consumo * CONSTANTE_PARSE_SEG);
-    printf("[Consumidor %d] Finalizei o consumo da torta de serial: %s.\n", dados->id_consumidor, torta_consumida.serial);
+    printf("[Consumidor %d] Finalizei o consumo da torta de serial: %d.\n", dados->id_consumidor, torta_consumida.serial);
 
     adicionar_torta_lista(torta_consumida);
-    decrementar_tortas_pendentes();
 }
 /**END REGION: Métodos Consumidor.**/
 
@@ -204,7 +174,7 @@ void gerar_relatorios() {
         media_tempo_consumo += torta.tempo_consumo;
         media_qualidade += torta.qualidade;
 
-        printf("Torta %d: %s com qualidade %d com tempo de produção %d seg. e tempo de consumo %d seg.\n", i + 1, torta.descricao, torta.qualidade, torta.tempo_producao, torta.tempo_consumo);
+        printf("Torta %d: %s com qualidade %d com tempo de produção %d seg. e tempo de consumo %d seg.\n", torta.serial, torta.descricao, torta.qualidade, torta.tempo_producao, torta.tempo_consumo);
     }
 
     printf("\nMédia de tempo de produção: %f\n", media_tempo_producao / quantidade_tortas_doce);
@@ -222,7 +192,7 @@ void gerar_relatorios() {
         media_tempo_consumo += torta.tempo_consumo;
         media_qualidade += torta.qualidade;
 
-        printf("Torta %d: %s com qualidade %d com tempo de produção %d seg. e tempo de consumo %d seg.\n", i + 1, torta.descricao, torta.qualidade, torta.tempo_producao, torta.tempo_consumo);
+        printf("Torta %d: %s com qualidade %d com tempo de produção %d seg. e tempo de consumo %d seg.\n", torta.serial, torta.descricao, torta.qualidade, torta.tempo_producao, torta.tempo_consumo);
     }
 
     printf("\nMédia de tempo de produção: %f\n", media_tempo_producao / quantidade_tortas_doce);
@@ -234,7 +204,7 @@ void gerar_relatorios() {
     for (int i = 0; i < quantidade_tortas_desperdicadas; i++) {
         Torta torta;
         dequeue(&fila, &torta);
-        printf("Torta %d: %s com qualidade %d com tempo de produção %d seg. e tempo de consumo %d seg.\n", i + 1, torta.descricao, torta.qualidade, torta.tempo_producao, torta.tempo_consumo);
+        printf("Torta %d: %s com qualidade %d com tempo de produção %d seg. e tempo de consumo %d seg.\n", torta.serial, torta.descricao, torta.qualidade, torta.tempo_producao, torta.tempo_consumo);
     }
     
     printf("Quantidade total de desperdício: %d\n\n", quantidade_tortas_desperdicadas);
@@ -325,20 +295,70 @@ int main(int argc, char *argv[]) {
     }
 
     int quantidade_tortas_produtor = atol(argv[1]);
-    quantidade_tortas_pendentes = quantidade_tortas_produtor * 3;
     
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = &finalizar_programa;
+
+    sigaction(SIGINT, &sa, NULL);
+
     srand(time(NULL));
+
+    sem_init(&mutex_fila, 0, 1);
+    sem_init(&sem_consumidor[0], 0, 0);
+    sem_init(&sem_consumidor[1], 0, 0);
 
     queueInit(&fila, sizeof(Torta));
 
-    inicializar_signal();
-    inicializar_semaforos();
-    inicializar_produtores();
-    inicializar_consumidores();
+    struct dados_produtor dados_produtor = {
+        .id_produtor = 1,
+        .sem_index_consumidor = 0,
+        .tipo_torta = 0,
+        .tipo_torta_doce = 1,
+        .quantidade_producao = quantidade_tortas_produtor
+    };
 
-    for (int i = 0; i < 5; i++) {
-        (void) pthread_join(thread[i], NULL);
-    }
+    struct dados_produtor dados_produtor2 = {
+        .id_produtor = 2,
+        .sem_index_consumidor = 0,
+        .tipo_torta = 1,
+        .tipo_torta_doce = 1,
+        .quantidade_producao = quantidade_tortas_produtor
+    };
+
+    struct dados_produtor dados_produtor3 = {
+        .id_produtor = 3,
+        .sem_index_consumidor = 1,
+        .tipo_torta = 2,
+        .tipo_torta_doce = 0,
+        .quantidade_producao = quantidade_tortas_produtor
+    };
+
+    struct dados_consumidor dados_cosumidor1 = {
+        .id_consumidor = 1,
+        .processa_torta_doce = 1,
+        .sem_index_consumidor = 0,
+        .sem_index_consumidor_concorrente = 1
+    };
+
+    struct dados_consumidor dados_cosumidor2 = {
+        .id_consumidor = 2,
+        .processa_torta_doce = 0,
+        .sem_index_consumidor = 1,
+        .sem_index_consumidor_concorrente = 0
+    };
+
+    pthread_create(&thread[0], NULL, criar_produtor, (void*) &dados_produtor);
+    pthread_create(&thread[1], NULL, criar_produtor, (void*) &dados_produtor2);
+    pthread_create(&thread[2], NULL, criar_produtor, (void*) &dados_produtor3);
+    pthread_create(&thread[3], NULL, criar_consumidor, (void*) &dados_cosumidor1);
+    pthread_create(&thread[4], NULL, criar_consumidor, (void*) &dados_cosumidor2);
+
+    (void) pthread_join(thread[0], NULL);
+    (void) pthread_join(thread[1], NULL);
+    (void) pthread_join(thread[2], NULL);
+    (void) pthread_join(thread[3], NULL);
+    (void) pthread_join(thread[4], NULL);
 
     exit(EXIT_SUCCESS);
 }

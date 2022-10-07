@@ -2,6 +2,7 @@
 #define TORTA_H_INCLUDED
 
 typedef struct {
+    int serial;
     char* descricao;
     short int qualidade;
     short int doce;
